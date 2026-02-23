@@ -42,7 +42,7 @@ class Settings(BaseSettings):
 
     # ── CORS ──────────────────────────────────────────────────
     # Comma-separated list.  On Railway, set this to your frontend URL(s).
-    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173"
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173,https://dba-report-fe-production.up.railway.app"
 
     # ── Auth credentials ──────────────────────────────────────
     # MUST be supplied via Railway env vars / .env — no hardcoded defaults here

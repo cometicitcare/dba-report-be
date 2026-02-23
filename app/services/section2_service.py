@@ -1,6 +1,7 @@
 """
 Buddhist Affairs MIS Dashboard - Section 2 Service (Detail Reports)
 """
+import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from typing import List
@@ -16,6 +17,7 @@ from app.schemas.dashboard import (
 )
 from app.schemas.filters import DashboardFilters
 
+logger = logging.getLogger(__name__)
 
 class Section2Service:
     """Service for Section 2 - Detail Reports"""
@@ -71,8 +73,9 @@ class Section2Service:
                 BikkuTypeItem(type_key="upasampada", type_name="උපසම්පදා", total=row[1] or 0),
                 BikkuTypeItem(type_key="upavidi",    type_name="උපවිදි",    total=0),
             ]
-        except Exception:
+        except Exception as e:
             # bhikku_high_regist table may not exist - just count all bhikku
+            logger.warning(f"Bhikku type breakdown from bhikku_high_regist failed, using fallback: {str(e)}")
             result2 = await self.db.execute(text(f"""
                 SELECT COUNT(*) FROM bhikku_regist b
                 WHERE (b.br_is_deleted = false OR b.br_is_deleted IS NULL) {extra_b}
@@ -164,7 +167,8 @@ class Section2Service:
                 data=items,
                 total_count=len(items)
             )
-        except Exception:
+        except Exception as e:
+            logger.info(f"Materialized view 'mv_dashboard_province_summary' not available: {str(e)}. Using direct queries.")
             return await self._get_province_fallback(filters)
     
     async def _get_province_fallback(self, filters: DashboardFilters = None) -> GeographicResponse:

@@ -348,3 +348,20 @@ async def get_vihara_types(
     """))
     rows = result.fetchall()
     return [{"code": row[0], "name": row[0]} for row in rows]
+
+
+@router.get("/bhikku-types", summary="Get Bhikku Types")
+async def get_bhikku_types() -> List[Dict[str, str]]:
+    """
+    Get list of Bhikku (Buddhist monk) type options.
+
+    Returns static list:
+    - samanera:   සාමණේර  (Novice monk)
+    - upasampada: උපසම්පදා (Fully ordained monk)
+    - upavidi:    උපවිදි   (Higher ordination)
+    """
+    return [
+        {"code": "samanera",   "name": "සාමණේර"},
+        {"code": "upasampada", "name": "උපසම්පදා"},
+        {"code": "upavidi",    "name": "උපවිදි"},
+    ]

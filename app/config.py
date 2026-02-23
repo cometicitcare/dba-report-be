@@ -2,7 +2,7 @@
 Buddhist Affairs MIS Dashboard - Configuration Settings
 """
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
+from pydantic import Field, model_validator
 from functools import lru_cache
 from typing import Optional
 from pathlib import Path
@@ -26,16 +26,28 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # ── Database ─────────────────────────────────────────────
-    # All DB fields are required — must be set via Railway env vars or .env
-    # (no hardcoded defaults so wrong values can never silently slip through)
-    DB_HOST: str = Field(..., description="PostgreSQL host")
+    # Individual fields are optional when DATABASE_URL / DATABASE_URL_OVERRIDE
+    # is supplied (Railway Postgres plugin injects DATABASE_URL automatically).
+    DB_HOST: Optional[str] = Field(None, description="PostgreSQL host")
     DB_PORT: int = Field(5432, description="PostgreSQL port")
-    DB_NAME: str = Field(..., description="PostgreSQL database name")
-    DB_USER: str = Field(..., description="PostgreSQL user")
-    DB_PASSWORD: str = Field(..., description="PostgreSQL password")
+    DB_NAME: Optional[str] = Field(None, description="PostgreSQL database name")
+    DB_USER: Optional[str] = Field(None, description="PostgreSQL user")
+    DB_PASSWORD: Optional[str] = Field(None, description="PostgreSQL password")
 
-    # Optional full URL override (Railway Postgres plugin injects DATABASE_URL)
-    DATABASE_URL_OVERRIDE: Optional[str] = None
+    # Full URL override — Railway Postgres plugin sets DATABASE_URL automatically
+    DATABASE_URL_OVERRIDE: Optional[str] = Field(None, alias="DATABASE_URL", validation_alias="DATABASE_URL")
+
+    @model_validator(mode="after")
+    def check_db_config(self) -> "Settings":
+        """Ensure either DATABASE_URL or individual DB fields are provided."""
+        if not self.DATABASE_URL_OVERRIDE:
+            missing = [f for f in ("DB_HOST", "DB_NAME", "DB_USER", "DB_PASSWORD")
+                       if not getattr(self, f)]
+            if missing:
+                raise ValueError(
+                    f"Missing required database config. Set DATABASE_URL or these env vars: {', '.join(missing)}"
+                )
+        return self
 
     # API Configuration
     API_V1_PREFIX: str = "/api/v1"

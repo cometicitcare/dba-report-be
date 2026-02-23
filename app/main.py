@@ -1,0 +1,140 @@
+"""
+Buddhist Affairs MIS Dashboard - FastAPI Application
+Main application entry point
+"""
+from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+
+from app.config import settings
+from app.database import check_database_connection
+from app.routers import (
+    auth_router,
+    require_auth,
+    dashboard_router,
+    section1_router,
+    section2_router,
+    section3_router,
+    temples_router,
+    lookups_router,
+    persons_router,
+)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan events"""
+    # Startup
+    print(f"🚀 Starting {settings.APP_NAME} v{settings.APP_VERSION}")
+    
+    # Check database connection
+    if await check_database_connection():
+        print("✅ Database connection successful")
+    else:
+        print("❌ Database connection failed - check configuration")
+    
+    yield
+    
+    # Shutdown
+    print("👋 Shutting down application")
+
+
+# Create FastAPI application
+app = FastAPI(
+    title=settings.APP_NAME,
+    description="""
+    ## Buddhist Affairs Department - Management Information System Dashboard API
+    
+    ### බෞද්ධ කටයුතු දෙපාර්තමේන්තුව - කළමනාකරණ තොරතුරු පද්ධති Dashboard API
+    
+    This API provides dashboard data for the Buddhist Affairs Department MIS.
+    
+    ### Sections:
+    
+    1. **Section 1 - Overall Summary**: Total system statistics
+       - Summary A: Type breakdown (Bikku, Silmatha, etc.)
+       - Summary B: Nikaya breakdown
+       - Summary C: Vihara Grading breakdown
+    
+    2. **Section 2 - Detail Reports**: Detailed breakdowns based on Section 1 selection
+       - Bikku Type breakdown
+       - Dahampasal breakdown
+       - Teachers breakdown
+       - Students breakdown
+       - Province/District geographic data
+    
+    3. **Section 3 - Selection Reports**: Selection-based reports
+       - Parshawa breakdown
+       - SSBM by Nikaya
+       - Divisional Secretariat breakdown
+       - GN Division breakdown
+       - Temple list
+    
+    4. **Section 4 - Temple Profile**: Individual temple details
+       - General Information
+       - Location Details
+       - Viharanga (Buildings)
+       - Dahampasal Information
+    
+    ### Interactive Features:
+    
+    - Click on Summary B/C items → Section 2 updates
+    - Click on Summary A items → Section 2 & 3 updates
+    - Click on Province/District → Section 3 updates
+    - Click on Temple → Full profile displays
+    """,
+    version=settings.APP_VERSION,
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ── Public routes (no auth required) ──────────────────────────
+app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
+
+# ── Protected routes (JWT required) ───────────────────────────
+_auth_dep = [Depends(require_auth)]
+
+app.include_router(dashboard_router, prefix=settings.API_V1_PREFIX, dependencies=_auth_dep)
+app.include_router(section1_router,  prefix=settings.API_V1_PREFIX, dependencies=_auth_dep)
+app.include_router(section2_router,  prefix=settings.API_V1_PREFIX, dependencies=_auth_dep)
+app.include_router(section3_router,  prefix=settings.API_V1_PREFIX, dependencies=_auth_dep)
+app.include_router(temples_router,   prefix=settings.API_V1_PREFIX, dependencies=_auth_dep)
+app.include_router(lookups_router,   prefix=settings.API_V1_PREFIX, dependencies=_auth_dep)
+app.include_router(persons_router,   prefix=settings.API_V1_PREFIX, dependencies=_auth_dep)
+
+
+@app.get("/", tags=["Root"])
+async def root():
+    """Root endpoint - API information"""
+    return {
+        "name": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "description": "Buddhist Affairs Department MIS Dashboard API",
+        "docs": "/docs",
+        "redoc": "/redoc",
+        "api_prefix": settings.API_V1_PREFIX,
+    }
+
+
+@app.get("/api", tags=["Root"])
+async def api_info():
+    """API information endpoint"""
+    return {
+        "endpoints": {
+            "dashboard": f"{settings.API_V1_PREFIX}/dashboard",
+            "section1": f"{settings.API_V1_PREFIX}/section1",
+            "section2": f"{settings.API_V1_PREFIX}/section2",
+            "section3": f"{settings.API_V1_PREFIX}/section3",
+            "temples": f"{settings.API_V1_PREFIX}/temples",
+        }
+    }

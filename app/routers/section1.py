@@ -22,6 +22,12 @@ router = APIRouter(prefix="/section1", tags=["Section 1 - Overall Summary"])
 async def get_section1(
     province_code: str = None,
     district_code: str = None,
+    nikaya_code: str = None,
+    parshawa_code: str = None,
+    grade: str = None,
+    ds_code: str = None,
+    gn_code: str = None,
+    ssbm_code: str = None,
     db: AsyncSession = Depends(get_db)
 ) -> Section1Response:
     """
@@ -34,7 +40,13 @@ async def get_section1(
     """
     filters = DashboardFilters(
         province_code=province_code,
-        district_code=district_code
+        district_code=district_code,
+        nikaya_code=nikaya_code,
+        parshawa_code=parshawa_code,
+        grade=grade,
+        ds_code=ds_code,
+        gn_code=gn_code,
+        ssbm_code=ssbm_code,
     )
     
     service = Section1Service(db)
@@ -45,24 +57,26 @@ async def get_section1(
 async def get_type_summary(
     province_code: str = None,
     district_code: str = None,
+    nikaya_code: str = None,
+    parshawa_code: str = None,
+    grade: str = None,
+    ds_code: str = None,
+    gn_code: str = None,
+    ssbm_code: str = None,
     db: AsyncSession = Depends(get_db)
 ) -> List[SummaryTypeItem]:
     """
     Get Summary A - Type breakdown (Bikku, Silmatha, etc.)
-    
-    Returns counts for:
-    - Bikku (Buddhist monks)
-    - Silmatha (Buddhist nuns)
-    - Dahampasal Teachers
-    - Dahampasal Students
-    - Vihara (Temples)
-    - Arama (Hermitages)
-    - Dahampasal (Buddhist Sunday Schools)
-    - SSBM (Sasana Rakshaka Bala Mandala)
     """
     filters = DashboardFilters(
         province_code=province_code,
-        district_code=district_code
+        district_code=district_code,
+        nikaya_code=nikaya_code,
+        parshawa_code=parshawa_code,
+        grade=grade,
+        ds_code=ds_code,
+        gn_code=gn_code,
+        ssbm_code=ssbm_code,
     )
     
     service = Section1Service(db)
@@ -73,20 +87,24 @@ async def get_type_summary(
 async def get_nikaya_summary(
     province_code: str = None,
     district_code: str = None,
+    nikaya_code: str = None,
+    parshawa_code: str = None,
+    grade: str = None,
+    ds_code: str = None,
+    gn_code: str = None,
     db: AsyncSession = Depends(get_db)
 ) -> List[SummaryNikayaItem]:
     """
     Get Summary B - Nikaya breakdown.
-    
-    Returns counts by Buddhist order (Nikaya):
-    - Ramanya
-    - Syomopali (Siam)
-    - Amarapura
-    - Not assigned
     """
     filters = DashboardFilters(
         province_code=province_code,
-        district_code=district_code
+        district_code=district_code,
+        nikaya_code=nikaya_code,
+        parshawa_code=parshawa_code,
+        grade=grade,
+        ds_code=ds_code,
+        gn_code=gn_code,
     )
     
     service = Section1Service(db)
@@ -97,20 +115,24 @@ async def get_nikaya_summary(
 async def get_grade_summary(
     province_code: str = None,
     district_code: str = None,
+    nikaya_code: str = None,
+    parshawa_code: str = None,
+    grade: str = None,
+    ds_code: str = None,
+    gn_code: str = None,
     db: AsyncSession = Depends(get_db)
 ) -> List[SummaryGradeItem]:
     """
     Get Summary C - Vihara Grading breakdown.
-    
-    Returns counts by temple grade:
-    - Grade A
-    - Grade B
-    - Grade C
-    - Grade D
     """
     filters = DashboardFilters(
         province_code=province_code,
-        district_code=district_code
+        district_code=district_code,
+        nikaya_code=nikaya_code,
+        parshawa_code=parshawa_code,
+        grade=grade,
+        ds_code=ds_code,
+        gn_code=gn_code,
     )
     
     service = Section1Service(db)

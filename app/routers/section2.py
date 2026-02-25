@@ -27,23 +27,25 @@ async def get_section2(
     grade: str = None,
     province_code: str = None,
     district_code: str = None,
+    ds_code: str = None,
+    gn_code: str = None,
+    ssbm_code: str = None,
+    parshawa_code: str = None,
     db: AsyncSession = Depends(get_db)
 ) -> Section2Response:
     """
     Get all Section 2 detail reports.
-    
-    This section shows detailed breakdowns based on Section 1 selection:
-    - Bikku Type breakdown (Samanera, Upasampada, Upavidi)
-    - Dahampasal location breakdown
-    - Teachers breakdown
-    - Students breakdown
     """
     filters = DashboardFilters(
         type_filter=type_filter,
         nikaya_code=nikaya_code,
         grade=grade,
         province_code=province_code,
-        district_code=district_code
+        district_code=district_code,
+        ds_code=ds_code,
+        gn_code=gn_code,
+        ssbm_code=ssbm_code,
+        parshawa_code=parshawa_code,
     )
     
     service = Section2Service(db)
@@ -154,25 +156,21 @@ async def get_province_data(
     type_filter: str = None,
     nikaya_code: str = None,
     grade: str = None,
+    parshawa_code: str = None,
+    ds_code: str = None,
+    gn_code: str = None,
     db: AsyncSession = Depends(get_db)
 ) -> GeographicResponse:
     """
     Get Province-wise breakdown of all metrics.
-    
-    Returns for each province:
-    - SSBM count
-    - Bikku count
-    - Silmatha count
-    - Dahampasal Teachers count
-    - Dahampasal Students count
-    - Vihara count
-    - Arama count
-    - Dahampasal count
     """
     filters = DashboardFilters(
         type_filter=type_filter,
         nikaya_code=nikaya_code,
-        grade=grade
+        grade=grade,
+        parshawa_code=parshawa_code,
+        ds_code=ds_code,
+        gn_code=gn_code,
     )
     
     service = Section2Service(db)
@@ -185,29 +183,22 @@ async def get_district_data(
     type_filter: str = None,
     nikaya_code: str = None,
     grade: str = None,
+    parshawa_code: str = None,
+    ds_code: str = None,
+    gn_code: str = None,
     db: AsyncSession = Depends(get_db)
 ) -> GeographicResponse:
     """
     Get District-wise breakdown of all metrics.
-    
-    **Filters:**
-    - province_code: Filter by province (shows only districts in that province)
-    
-    Returns for each district:
-    - SSBM count
-    - Bikku count
-    - Silmatha count
-    - Dahampasal Teachers count
-    - Dahampasal Students count
-    - Vihara count
-    - Arama count
-    - Dahampasal count
     """
     filters = DashboardFilters(
         province_code=province_code,
         type_filter=type_filter,
         nikaya_code=nikaya_code,
-        grade=grade
+        grade=grade,
+        parshawa_code=parshawa_code,
+        ds_code=ds_code,
+        gn_code=gn_code,
     )
     
     service = Section2Service(db)

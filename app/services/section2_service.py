@@ -1,7 +1,6 @@
 """
 Buddhist Affairs MIS Dashboard - Section 2 Service (Detail Reports)
 """
-import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from typing import List
@@ -17,7 +16,6 @@ from app.schemas.dashboard import (
 )
 from app.schemas.filters import DashboardFilters
 
-logger = logging.getLogger(__name__)
 
 class Section2Service:
     """Service for Section 2 - Detail Reports"""
@@ -53,6 +51,15 @@ class Section2Service:
             if filters.district_code:
                 extra_b += " AND b.br_district = :district"
                 params["district"] = filters.district_code
+            if filters.parshawa_code:
+                extra_b += " AND b.br_parshawaya = :parshawa"
+                params["parshawa"] = filters.parshawa_code
+            if filters.ds_code:
+                extra_b += " AND b.br_division = :ds_code"
+                params["ds_code"] = filters.ds_code
+            if filters.gn_code:
+                extra_b += " AND b.br_gndiv = :gn_code"
+                params["gn_code"] = filters.gn_code
 
         try:
             result = await self.db.execute(text(f"""
@@ -73,9 +80,8 @@ class Section2Service:
                 BikkuTypeItem(type_key="upasampada", type_name="උපසම්පදා", total=row[1] or 0),
                 BikkuTypeItem(type_key="upavidi",    type_name="උපවිදි",    total=0),
             ]
-        except Exception as e:
+        except Exception:
             # bhikku_high_regist table may not exist - just count all bhikku
-            logger.warning(f"Bhikku type breakdown from bhikku_high_regist failed, using fallback: {str(e)}")
             result2 = await self.db.execute(text(f"""
                 SELECT COUNT(*) FROM bhikku_regist b
                 WHERE (b.br_is_deleted = false OR b.br_is_deleted IS NULL) {extra_b}
@@ -167,8 +173,7 @@ class Section2Service:
                 data=items,
                 total_count=len(items)
             )
-        except Exception as e:
-            logger.info(f"Materialized view 'mv_dashboard_province_summary' not available: {str(e)}. Using direct queries.")
+        except Exception:
             return await self._get_province_fallback(filters)
     
     async def _get_province_fallback(self, filters: DashboardFilters = None) -> GeographicResponse:
@@ -255,8 +260,34 @@ class Section2Service:
     async def _get_district_fallback(self, filters: DashboardFilters = None) -> GeographicResponse:
         """District data using direct queries — no materialized views, results match province aggregates."""
         where_clause = ""
+        bikku_extra = ""
+        silmatha_extra = ""
+        vihara_extra = ""
+        arama_extra = ""
+
         if filters and filters.province_code:
             where_clause = f"AND d.dd_prcode = '{filters.province_code}'"
+        if filters and filters.district_code:
+            where_clause += f" AND d.dd_dcode = '{filters.district_code}'"
+        if filters and filters.nikaya_code:
+            bikku_extra   += f" AND br_nikaya = '{filters.nikaya_code}'"
+            vihara_extra  += f" AND vh_nikaya = '{filters.nikaya_code}'"
+            arama_extra   += f" AND ar_nikaya = '{filters.nikaya_code}'"
+        if filters and filters.parshawa_code:
+            bikku_extra   += f" AND br_parshawaya = '{filters.parshawa_code}'"
+            vihara_extra  += f" AND vh_parshawa = '{filters.parshawa_code}'"
+            arama_extra   += f" AND ar_parshawa = '{filters.parshawa_code}'"
+        if filters and getattr(filters, 'grade', None):
+            vihara_extra  += f" AND vh_typ = '{filters.grade}'"
+        if filters and filters.ds_code:
+            bikku_extra   += f" AND br_division = '{filters.ds_code}'"
+            vihara_extra  += f" AND vh_divisional_secretariat = '{filters.ds_code}'"
+            where_clause  += f" AND EXISTS (SELECT 1 FROM cmm_dvsec dv WHERE dv.dv_dvcode = '{filters.ds_code}' AND dv.dv_distrcd = d.dd_dcode)"
+        if filters and filters.gn_code:
+            bikku_extra   += f" AND br_gndiv = '{filters.gn_code}'"
+            silmatha_extra += f" AND sil_gndiv = '{filters.gn_code}'"
+            vihara_extra  += f" AND vh_gndiv = '{filters.gn_code}'"
+            arama_extra   += f" AND ar_gndiv = '{filters.gn_code}'"
         
         result = await self.db.execute(text(f"""
             SELECT 
@@ -266,15 +297,15 @@ class Section2Service:
                          JOIN vihaddata v ON sar.sar_temple_trn = v.vh_trn 
                          WHERE v.vh_district = d.dd_dcode), 0) as ssbm_count,
                 COALESCE((SELECT COUNT(*) FROM bhikku_regist WHERE br_district = d.dd_dcode 
-                         AND (br_is_deleted = false OR br_is_deleted IS NULL)), 0) as bikku_count,
+                         AND (br_is_deleted = false OR br_is_deleted IS NULL) {bikku_extra}), 0) as bikku_count,
                 COALESCE((SELECT COUNT(*) FROM silmatha_regist WHERE sil_district = d.dd_dcode 
-                         AND (sil_is_deleted = false OR sil_is_deleted IS NULL)), 0) as silmatha_count,
+                         AND (sil_is_deleted = false OR sil_is_deleted IS NULL) {silmatha_extra}), 0) as silmatha_count,
                 0 as dahampasal_teachers_count,
                 0 as dahampasal_students_count,
                 COALESCE((SELECT COUNT(*) FROM vihaddata WHERE vh_district = d.dd_dcode 
-                         AND (vh_is_deleted = false OR vh_is_deleted IS NULL)), 0) as vihara_count,
+                         AND (vh_is_deleted = false OR vh_is_deleted IS NULL) {vihara_extra}), 0) as vihara_count,
                 COALESCE((SELECT COUNT(*) FROM aramadata WHERE ar_district = d.dd_dcode 
-                         AND (ar_is_deleted = false OR ar_is_deleted IS NULL)), 0) as arama_count,
+                         AND (ar_is_deleted = false OR ar_is_deleted IS NULL) {arama_extra}), 0) as arama_count,
                 0 as dahampasal_count
             FROM cmm_districtdata d
             WHERE (d.dd_is_deleted = false OR d.dd_is_deleted IS NULL)

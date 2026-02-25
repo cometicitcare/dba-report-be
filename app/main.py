@@ -26,18 +26,18 @@ from app.routers import (
 async def lifespan(app: FastAPI):
     """Application lifespan events"""
     # Startup
-    print(f"🚀 Starting {settings.APP_NAME} v{settings.APP_VERSION}")
+    print(f"[START] Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     
     # Check database connection
     if await check_database_connection():
-        print("✅ Database connection successful")
+        print("[OK] Database connection successful")
     else:
-        print("❌ Database connection failed - check configuration")
+        print("[ERROR] Database connection failed - check configuration")
     
     yield
     
     # Shutdown
-    print("👋 Shutting down application")
+    print("[STOP] Shutting down application")
 
 
 # Create FastAPI application

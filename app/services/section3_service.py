@@ -61,6 +61,15 @@ class Section3Service:
                 p_where += f" AND p.pr_nikayacd = '{filters.nikaya_code}'"
             if filters.parshawa_code:
                 p_where += f" AND p.pr_prn = '{filters.parshawa_code}'"
+            if filters.ds_code:
+                v_where += f" AND v.vh_divisional_secretariat = '{filters.ds_code}'"
+                b_where += f" AND b.br_division = '{filters.ds_code}'"
+            if filters.gn_code:
+                v_where += f" AND v.vh_gndiv = '{filters.gn_code}'"
+                b_where += f" AND b.br_gndiv = '{filters.gn_code}'"
+                a_where += f" AND a.ar_gndiv = '{filters.gn_code}'"
+            if getattr(filters, 'grade', None):
+                v_where += f" AND v.vh_typ = '{filters.grade}'"
 
         result = await self.db.execute(text(f"""
             SELECT
@@ -145,6 +154,12 @@ class Section3Service:
             if filters.ds_code:
                 # sr_dvcd already scopes the DS; also filter viharas directly
                 ssbm_where += f" AND s.sr_dvcd = '{filters.ds_code}'"
+            if getattr(filters, 'ssbm_code', None):
+                ssbm_where += f" AND s.sr_ssbmcode = '{filters.ssbm_code}'"
+            if filters.nikaya_code:
+                v_where    += f" AND v.vh_nikaya = '{filters.nikaya_code}'"
+            if getattr(filters, 'grade', None):
+                v_where    += f" AND v.vh_typ = '{filters.grade}'"
 
         result = await self.db.execute(text(f"""
             SELECT
@@ -262,6 +277,16 @@ class Section3Service:
             if filters.district_code:
                 v_where += f" AND v.vh_district = '{filters.district_code}'"
                 district_filter = f" AND dv.dv_distrcd = '{filters.district_code}'"
+            if filters.nikaya_code:
+                v_where += f" AND v.vh_nikaya = '{filters.nikaya_code}'"
+            if filters.parshawa_code:
+                v_where += f" AND v.vh_parshawa = '{filters.parshawa_code}'"
+            if getattr(filters, 'grade', None):
+                v_where += f" AND v.vh_typ = '{filters.grade}'"
+            if filters.ds_code:
+                district_filter += f" AND dv.dv_dvcode = '{filters.ds_code}'"
+            if getattr(filters, 'ssbm_code', None):
+                district_filter += f" AND EXISTS (SELECT 1 FROM cmm_sasanarbm s WHERE s.sr_dvcd = dv.dv_dvcode AND s.sr_ssbmcode = '{filters.ssbm_code}')"
 
         result = await self.db.execute(text(f"""
             SELECT

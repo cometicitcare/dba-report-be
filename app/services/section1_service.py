@@ -55,6 +55,34 @@ class Section1Service:
             ar_where    += " AND ar_district = :district"
             params["district"] = filters.district_code
 
+        if filters and filters.nikaya_code:
+            bikku_where += " AND br_nikaya = :nikaya"
+            vh_where    += " AND vh_nikaya = :nikaya"
+            ar_where    += " AND ar_nikaya = :nikaya"
+            params["nikaya"] = filters.nikaya_code
+
+        if filters and filters.parshawa_code:
+            bikku_where += " AND br_parshawaya = :parshawa"
+            vh_where    += " AND vh_parshawa = :parshawa"
+            ar_where    += " AND ar_parshawa = :parshawa"
+            params["parshawa"] = filters.parshawa_code
+
+        if filters and filters.grade:
+            vh_where += " AND vh_typ = :grade"
+            params["grade"] = filters.grade
+
+        if filters and filters.ds_code:
+            bikku_where += " AND br_division = :ds_code"
+            vh_where    += " AND vh_divisional_secretariat = :ds_code"
+            params["ds_code"] = filters.ds_code
+
+        if filters and filters.gn_code:
+            bikku_where += " AND br_gndiv = :gn_code"
+            sil_where   += " AND sil_gndiv = :gn_code"
+            vh_where    += " AND vh_gndiv = :gn_code"
+            ar_where    += " AND ar_gndiv = :gn_code"
+            params["gn_code"] = filters.gn_code
+
         result = await self.db.execute(text(f"""
             SELECT
                 (SELECT COUNT(*) FROM bhikku_regist        WHERE {bikku_where}) AS bikku_count,
@@ -102,6 +130,27 @@ class Section1Service:
             a_where += " AND a.ar_district = :district"
             params["district"] = filters.district_code
 
+        if filters and filters.parshawa_code:
+            b_where += " AND b.br_parshawaya = :parshawa"
+            v_where += " AND v.vh_parshawa = :parshawa"
+            a_where += " AND a.ar_parshawa = :parshawa"
+            params["parshawa"] = filters.parshawa_code
+
+        if filters and filters.grade:
+            v_where += " AND v.vh_typ = :grade"
+            params["grade"] = filters.grade
+
+        if filters and filters.ds_code:
+            b_where += " AND b.br_division = :ds_code"
+            v_where += " AND v.vh_divisional_secretariat = :ds_code"
+            params["ds_code"] = filters.ds_code
+
+        if filters and filters.gn_code:
+            b_where += " AND b.br_gndiv = :gn_code"
+            v_where += " AND v.vh_gndiv = :gn_code"
+            a_where += " AND a.ar_gndiv = :gn_code"
+            params["gn_code"] = filters.gn_code
+
         result = await self.db.execute(text(f"""
             SELECT
                 n.nk_nkn                    AS nikaya_code,
@@ -147,6 +196,22 @@ class Section1Service:
         if filters and filters.district_code:
             extra_where += " AND vh_district = :district"
             params["district"] = filters.district_code
+
+        if filters and filters.nikaya_code:
+            extra_where += " AND vh_nikaya = :nikaya"
+            params["nikaya"] = filters.nikaya_code
+
+        if filters and filters.parshawa_code:
+            extra_where += " AND vh_parshawa = :parshawa"
+            params["parshawa"] = filters.parshawa_code
+
+        if filters and filters.ds_code:
+            extra_where += " AND vh_divisional_secretariat = :ds_code"
+            params["ds_code"] = filters.ds_code
+
+        if filters and filters.gn_code:
+            extra_where += " AND vh_gndiv = :gn_code"
+            params["gn_code"] = filters.gn_code
 
         result = await self.db.execute(text(f"""
             SELECT

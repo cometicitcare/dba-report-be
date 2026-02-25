@@ -56,17 +56,25 @@ async def get_parshawa(
     district_code: str = None,
     nikaya_code: str = None,
     parshawa_code: str = None,
+    ds_code: str = None,
+    gn_code: str = None,
+    ssbm_code: str = None,
+    grade: str = None,
     db: AsyncSession = Depends(get_db)
 ) -> List[ParshawaItem]:
     """
     Get Parshawa (Buddhist sub-section) breakdown with counts.
-    Filtered by province, district and/or nikaya.
+    Filtered by province, district, nikaya, ds, gn etc.
     """
     filters = DashboardFilters(
         province_code=province_code,
         district_code=district_code,
         nikaya_code=nikaya_code,
         parshawa_code=parshawa_code,
+        ds_code=ds_code,
+        gn_code=gn_code,
+        ssbm_code=ssbm_code,
+        grade=grade,
     )
     
     service = Section3Service(db)
@@ -78,6 +86,9 @@ async def get_ssbm_org_list(
     province_code: str = None,
     district_code: str = None,
     ds_code: str = None,
+    ssbm_code: str = None,
+    nikaya_code: str = None,
+    grade: str = None,
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -88,6 +99,9 @@ async def get_ssbm_org_list(
         province_code=province_code,
         district_code=district_code,
         ds_code=ds_code,
+        ssbm_code=ssbm_code,
+        nikaya_code=nikaya_code,
+        grade=grade,
     )
     service = Section3Service(db)
     return await service.get_ssbm_org_list(filters)
@@ -116,16 +130,26 @@ async def get_ssbm_by_nikaya(
 @router.get("/divisional-secretariat", response_model=List[DivisionalSecItem], summary="Get DS Breakdown")
 async def get_divisional_secretariat(
     district_code: str = None,
+    province_code: str = None,
+    nikaya_code: str = None,
+    parshawa_code: str = None,
+    grade: str = None,
+    ds_code: str = None,
+    ssbm_code: str = None,
     db: AsyncSession = Depends(get_db)
 ) -> List[DivisionalSecItem]:
     """
     Get Divisional Secretariat breakdown.
-    
     Shows temple counts per Divisional Secretariat.
-    Filter by district_code to narrow down results.
     """
     filters = DashboardFilters(
-        district_code=district_code
+        district_code=district_code,
+        province_code=province_code,
+        nikaya_code=nikaya_code,
+        parshawa_code=parshawa_code,
+        grade=grade,
+        ds_code=ds_code,
+        ssbm_code=ssbm_code,
     )
     
     service = Section3Service(db)

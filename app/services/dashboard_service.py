@@ -1,7 +1,6 @@
 """
 Buddhist Affairs MIS Dashboard - Main Dashboard Service
 """
-import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from typing import Dict, Any
@@ -11,7 +10,6 @@ from app.services.section2_service import Section2Service
 from app.services.section3_service import Section3Service
 from app.schemas.filters import DashboardFilters
 
-logger = logging.getLogger(__name__)
 
 class DashboardService:
     """Main dashboard service that coordinates all sections"""
@@ -59,9 +57,8 @@ class DashboardService:
             """))
             rows = result.fetchall()
             return {row[0]: row[1] for row in rows}
-        except Exception as e:
+        except Exception:
             # Fallback to direct queries if views don't exist
-            logger.info(f"Materialized view 'mv_dashboard_type_summary' not available: {str(e)}. Using direct queries.")
             return await self._get_stats_fallback()
     
     async def _get_stats_fallback(self) -> Dict[str, int]:
@@ -118,8 +115,7 @@ class DashboardService:
         try:
             await self.db.execute(text("SELECT refresh_dashboard_views()"))
             await self.db.commit()
-            logger.info("Dashboard materialized views refreshed successfully")
             return True
         except Exception as e:
-            logger.error(f"Error refreshing dashboard views: {str(e)}")
+            print(f"Error refreshing views: {e}")
             return False
